@@ -1,0 +1,13 @@
+---
+title: Search
+---
+
+#content
+  %span#loading
+
+
+:javascript
+  $('#content').tapir({
+    token: '4dbfc79e3f61b05b53000011',
+    complete: function(){ $('#content #loading').remove() }
+  });
