@@ -1,3 +1,3 @@
 # matsimitsu.com
 
-%p My personal blog.
+My personal blog.
