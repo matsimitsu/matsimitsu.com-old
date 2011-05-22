@@ -1,0 +1,90 @@
+---
+kind: article
+created_at: 2008/01/07
+title: SaveAll with CakePHP
+excerpt: Part 1 of everything SaveAll for CakePHP.
+tags:
+- CakePHP
+---
+
+SaveAll in Cakephp
+
+
+Since the new beta release for CakePHP there is a nice feature called saveAll and, like the name says, it saves all model data in a form. What this means is that you don't have to do nasty stuff in the controllers (like looping).
+
+Lets make a simple todo list to demonstrate.
+
+First we need a table named tasks.
+It has an id, int(11) and a name, varchar(255).
+
+
+<h3>Models</h3>
+
+Now we set up the model task.php (in /app/models/task.php)
+<pre><code>
+<?php
+class Task extends AppModel
+{
+ var $name = 'Task';
+}
+?>
+</code></pre>
+
+
+<h3>Controller</h3>
+Next we set up the controller (in /app/controller/tasks_controller.php)
+<pre><code>
+<?php
+class TasksController extends AppController {
+  var $name = 'Tasks';
+  var $paginate = array('limit' => 50, 'page' => 1);
+
+  function index(){
+    $this->set('tasks', $this->paginate('Task'));
+  }
+
+  function add() {
+    if (!empty($this->data)) {
+      $this->cleanUpFields();
+      $this->Task->create();
+      if ($this->Task->saveAll($this->data)) {
+        $this->Session->setFlash('List saved');
+        $this->redirect(array('action'=>'index'), null, true);
+      } else {
+        $this->Session->setFlash('List could not be saved');
+        $this->redirect(array('action'=>'index'), null, true);
+      }
+    }
+  }
+
+}
+?>
+</code></pre>
+
+
+You can see that there is nothing different here except for the $this->Task->saveAll($this->data);
+That is where most of the magic happens. The other magic is in the views, lets look at add.ctp
+
+
+<h3>Views</h3>
+
+(/app/views/tasks/add.ctp)
+<pre><code>
+<div class="todos form">
+<?php echo $form->create('Task');?>
+  <fieldset>
+     <legend><?php __('Add Tasks');?></legend>
+  <?php
+    echo $form->input('Task.1.name');
+                echo $form->input('Task.2.name');
+                // and so on...
+  ?>
+  </fieldset>
+<?php echo $form->end('Submit');?>
+</div>
+</code></pre>
+
+Note the task.1.name, this is to let the model know that there could be more tasks.
+And that's basically it!
+
+Tomorrow i'll make a post about the other feature of saveAll, saving related models.

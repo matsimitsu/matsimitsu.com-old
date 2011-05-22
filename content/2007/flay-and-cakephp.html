@@ -1,0 +1,100 @@
+---
+kind: article
+created_at: 2007/10/09
+title: Flay and cakePHP
+excerpt: A simple text helper.
+tags:
+- CakePHP
+---
+
+Whilst browsing the CakePHP API documentation this morning i stumbled upon the class Flay. According to the documentation it's a textformatter like <a href="http://textism.com/tools/textile/" title="link to textile">Textile</a>.
+This got me interested and i tried searching for some documentation about flay in cake. Unfortunately i couldn't find anything on the net. So i dove into the code and tried some tags to see what it does.
+
+To use flay you can either use the Texthelper
+
+In your controller do:
+<pre><code>
+var $helpers = array('Text');
+</code></pre>
+
+And in your view do:
+
+<pre><code>flay($text); ?>
+</code></pre>
+
+You can allow html tags by using this code instead of the above (there are some issues with this tough, see bottom of article):
+<pre><code>
+<?php echo $text->flay($text, true); ?>
+</code></pre>
+
+
+You can also use the uses('Flay'); in your controller/model
+
+<pre><code>
+uses('flay');
+class <ClassName> extends AppModel {...}
+</code></pre>
+
+This way you get some extra features to use within the Flay class like:
+
+<pre><code>
+colorMark($words, $string)
+extractWords($string)
+fragment($text, $length, $ellipsis= '...')
+log($msg, $type=LOG_ERROR)
+markedSnippets($words, $string, $max_snippets=5)
+requestAction($url, $extra=array())
+toClean($text)
+toHtml($text=null, $bare=false, $allowHtml=false)
+toParsedAndClean($text)
+toString()
+</code></pre>
+
+See more about the other features at <a href="http://docs.cakephp.nu/classes/show/Flay" title="link to cakephp docs">docs.cakephp.nu</a>
+
+
+It has a few nice features to make your submitted text a little nicer.
+
+First of it replaces the double newline with a paragraph, saving you the typing of
+<pre><code><p> and </p></code></pre>
+To force a paragraph you could also type <pre><code>%PARAGRAPH%</code></pre>
+
+For a linebreak type:
+<pre><code>%LINEBREAK%</code></pre>
+
+You can also make blockquotes:
+<pre><code>%BLOCKQUOTE% ... %ENDBLOCKQUOTE%</code></pre>
+
+Or center the text with
+<pre><code>%CENTER% ... %ENDCENTER%</code></pre>
+
+To format the text strong/bold or emphasis/italic use
+<pre><code>*strong* or _emphasis_</code></pre>
+
+It also does some basic url detection/formatting
+
+links beginning with http:// are automatically formatted to a link, so no more
+<pre><code><a href=""></a></code></pre>
+
+To force a link type
+<pre><code>[link]</code></pre>
+where link is the actual url.
+
+Images are also automatically detected so instead of
+<pre><code><img src="http://url.com/image.jpg"/></code></pre>
+type
+<pre><code> http://url.com/image.jpg </code></pre>
+
+Same goes with E-mail adresses.
+
+These are the basic features of Flay and for some basic html formatting it's really nice to use. But if you want to add a title to your link for example, or use alt text for your image you need to use the html tags.
+
+And that's where the problem is. Flay breaks html code, because it replaces the < and > tags. So a
+<pre><code><a href="cakephp.org" title="link to cakephp">CakePHP</a></code></pre>
+
+becomes
+<pre><code><a href="<a href="cakephp.org"">cakephp.org"</a> title="link to cakephp">CakePHP</a></code></pre>
+wich obviously is broken.
+
+
+For simple formatting Flay does the job well and for most users of simple sites it's sufficient. But if you want more semantic html (alt-tags and titles) you have to use one of the other formatting tools like <a href="http://textism.com/tools/textile/" title="link to textile">Textile</a>

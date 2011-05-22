@@ -1,0 +1,99 @@
+---
+kind: article
+created_at: 2008/11/03
+title: "Permanent appended named parameters in routes with CakePHP"
+excerpt: Append any named parameter to every route in CakePHP.
+tags:
+- CakePHP
+---
+
+For a project i'm working on i needed a bit of custom routing.
+Basically the project is a shop where you can edit multiple events and i stored the current event in a session.
+But the request came if the client could edit multiple events at the same time.
+Long story short, i needed the event_id somewhere in the url and this is where the router comes in to play.
+
+There are a couple of ways to get the event_id in the url with custom routing.
+
+<h3>Option one</h3>
+
+Use a named parameter
+
+this method will append event_id:[UUID] to the url.
+for example: http://www.example.com/products/index/event_id:490ed5ab-ed6c-4034-8205-0264d5453078
+
+in /app/config/routes.php
+<pre><code>
+  Router::connectNamed(array('event_id'=>$UUID), array('default' => true, 'greedy' => false));
+</code></pre>
+This will let the router know that we have a named part called event_id.
+It will also check if event_id is an UUID (other possibilities are $ID, $day, $month and $year, or a regular expression).
+
+<h3>Helper</h3>
+This was the easy part, because you need to tell all the helpers that create an url to use 'event_id'=>'[UUID]'.
+In my case i already wrote an app and i didn't feel like rewriting all links and forms, so i created a file called app_helper.php in the app folder like so:
+
+/app/app_helper.php
+<pre><code>
+<?php
+class AppHelper extends Helper {
+        function url($url = null, $full = false) {
+                if (is_array($url)) {
+                        if (empty($url['event_id']) && isset($this->params['named]['event_id'])) {
+                                $url['event_id'] = $this->params['named]['event_id'];
+                        }
+                }
+                return parent::url($url, $full);
+        }
+}
+?>
+</code></pre>
+What this does is append the event_id to all url arrays and then calls the parent url function (in /cake/lib/helper/helper.php).
+Because all helpers extend AppHelper, all url calls will go tough the above function.
+
+<h3>Redirect</h3>
+Now we only need to address one more issue, namely the $this->redirect(); function in the controllers, because we want the event_id appended to those url's too.
+
+/app/app_controller.php
+<pre><code>
+ function redirect($url, $status = null, $exit = true) {
+   if (is_array($url)) {
+        if (empty($url['event_id']) && isset($this->params['named]['event_id'])) {
+          $url['event_id'] = $this->params['named']['event_id'];
+        }
+   }
+    return parent::redirect($url, $status, $exit);
+}
+</code></pre>
+All controllers extend app_controller so they will all use this new redirect function.
+
+So once you add event_id:[UUID] to an url, it will always be appended.
+the event id can be retrieved in all controllers by calling $this->params['named']['event_id'] or $this->passedArgs['event_id']
+
+<h3>Option two</h3>
+The other way to do this is by changing a lot of routes in the routes.php file, but the url will be prettier (like: http://www.example.com/event_id/controller/action/params)
+
+(/app/config/routes.php)
+<pre><code>
+  /*
+   * The following section is to add the event_id to each backend url
+   * The event_id is added in the url method of app_helper.php and redirect method of app_model.php
+   */
+  Router::connect('/:event_id/:controller',
+      array('controller'=>':controller'), array('event_id'=>$UUID));
+
+  Router::connect('/:event_id/:controller/:action',
+      array('controller'=>':controller', 'action'=>':action'), array('event_id'=>$UUID));
+
+  Router::connect('/:event_id/:controller/:action/:id',
+      array('controller'=>':controller', 'action'=>':action', 'id'=>':id'), array('pass'=>array('id'),'event_id'=>$UUID));
+
+  Router::connect('/:event_id/:controller/:action/:id/*',
+      array('controller'=>':controller', 'action'=>':action', 'id'=>':id'), array('pass'=>array('id'), 'event_id'=>$UUID));
+
+  Router::connect('/:event_id/:controller/:action/*',
+      array('controller'=>':controller', 'action'=>':action'), array('event_id'=>$UUID));
+</code></pre>
+
+I'm not shure if this is the most efficient way to cover all routes, but if you replace the code from the first block with this code, you get the nice url   (http://www.example.com/event_id/controller/action/params).
+
+The last array makes shure only uuid's are used by the router.

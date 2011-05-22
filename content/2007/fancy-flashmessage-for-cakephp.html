@@ -1,0 +1,121 @@
+---
+kind: article
+created_at: 2007/10/09
+title: Fancy flashmessage for CakePHP
+excerpt: Highlight flash messages automatically.
+tags:
+- CakePHP
+---
+
+Flash messages usually need the attention of the people using your site, so why not make them stand out a bit more?
+
+The requirements are: <a href="http://www.prototypejs.org/">prototype</a> and <a href="http://script.aculo.us/">scriptaculous</a> loaded and highlight.js (i'll discuss all below)
+
+
+Download scriptaculous here: <a href="http://script.aculo.us/downloads">http://script.aculo.us/downloads</a> (prototype is included in the zip file)
+
+Upload scriptaculous to your webroot/js
+
+<a href='http://blog.matsimitsu.nl/wp-content/uploads/2007/10/prototype_scriptaculous.jpg' title='Prototype scriptaculous'><img src='http://blog.matsimitsu.nl/wp-content/uploads/2007/10/prototype_scriptaculous_thumb.jpg' alt='prototype scriptaculous'  width="500" height="229"/></a> (click for large)
+
+
+Next we need to create a new javascript file called highlight.js
+
+Insert the following code in there
+
+<pre><code>
+function highlight_message()
+{
+  var id="flashMessage";
+  if (document.getElementById(id)) {
+    var elemento=document.getElementById(id);
+    if (elemento.innerHTML.length>0)
+      {
+        new Effect.Highlight(id, {startcolor:'#FF0033', duration: 1.0} );
+      }
+  }
+  Event.stopObserving(window, 'load', highlight_message);
+}
+Event.observe(window, 'load', highlight_message, false)
+</code></pre>
+
+What this script does it waits for the document to load and then fires the highlight_message() function.
+This function searches for the id flashMessage. If that id exists on the page it adds a highlight effect from scriptaculous to it.
+The startcolor is reddish, but you can change it to any hex colour (like #FFF or #000).
+Upload this file to the /webroot/js directory too.
+
+Now load the javascript files in your default.ctp
+<pre><code>
+  <?php print $javascript->link('prototype') ?>
+  <?php print $javascript->link('scriptaculous') ?>
+  <?php print $javascript->link('highlight') ?>
+</code></pre>
+
+
+And there you have it, an unobtrusive highlight function that highlights the flashmessage.
+
+<!--more-->
+
+You can extend this script to do all kinds of fancy effects, the one i'm currently using is the following:
+
+Add this to your css file:
+
+<pre><code>
+#flashMessage{
+    position: absolute;
+    top: 40px;
+    left: 25%;
+    width: 50%;
+    padding: 16px;
+    z-index:1002;
+    overflow: auto;
+  text-align: center;
+  background-color: #fff;
+  border: 5px solid #d7d7d7;
+  padding: 10px;
+  font-size: 1.5em;
+}
+
+#flashMessage p {
+  margin-top: 10px;
+  margin-bottom: 0px;
+  color: #3b76c0;
+  font-size: 0.7em;
+}
+</code></pre>
+
+and add this to your flashmessage.js, replacing all old contents.
+
+<pre><code>
+function highlight_message()
+{
+  var id="flashMessage";
+  if (document.getElementById(id)) {
+    var elemento=document.getElementById(id);
+    if (elemento.innerHTML.length>0)
+      {
+        new Effect.Highlight(id, {startcolor:'#FADB9F', duration: 0.5} );
+        new Insertion.Bottom(id, '<p>Click anywhere to close</p>');
+      }
+  }
+  Event.stopObserving(window, 'load', highlight_message);
+}
+
+function close_highlight_message()
+{
+  var id="flashMessage";
+  if (document.getElementById(id)) {
+    var elemento=document.getElementById(id);
+    if (elemento.innerHTML.length>0)
+      {
+        new Effect.Fade(id);
+      }
+  }
+  Event.stopObserving(window, 'load', highlight_message);
+}
+
+Event.observe(window, 'load', highlight_message, false);
+Event.observe(window, 'click', close_highlight_message, false);
+</code></pre>
+
+This script does the same as the one mentioned above, but it also adds a paragraph element and an observer to a mouseclick to close the highlight message.

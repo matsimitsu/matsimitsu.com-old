@@ -1,0 +1,50 @@
+---
+kind: article
+created_at: 2008/08/20
+title: "Cakephp routing: prefixes and forms"
+excerpt: Routing prefixes explained.
+tags:
+- CakePHP
+---
+
+Prefixes are a nice way to define routes for groups of actions, (see the <a href="http://book.cakephp.org/view/544/prefix-routing" title="cookbook article: prefix routing">cookbook</a>).
+
+All admin_ actions go with the /admin/<controller>/<action> url
+For my project i needed both an admin route and a dashboard route, so i made prefixes for them like:
+
+(/app/config/routes.php)
+<pre><code>
+  Router::connect('/dashboard/:controller/:action/*', array('prefix' => 'dashboard'));
+</code></pre>
+
+Now in the view you can use the following:
+<pre><code>
+ echo $html->link('Profile', array('controller'=>'users', 'action'=>'dashboard_profile'), array('title'=>'Edit profile'))
+</code></pre>
+
+But when it comes to forms things start to break.
+
+For example the following:
+<pre><code>
+echo $form->create('User', array('action'=>'dashboard_profile'));
+</code></pre>
+or this one:
+<pre><code>
+echo $form->create('User', array('url'=>array('controller'=>'users', 'action'=>'dashboard_edit')));
+</code></pre>
+generate the following (wrong) link: <strong>/users/dashboard_profile/1</strong>
+
+While it does point to the right action (dashboard_profile) you get an error message explaining that this is a private action. The only way to use this private action is to use the prefix method.
+
+The reason for this is that the form generate part in the cake code doesn't do anything with the routing, thus ignoring the prefix we've set.
+
+After some digging in the api i found a cake-way to generate the right url:
+<pre><code>
+echo $form->create('User', array('url'=>$html->url(array('action'=>'dashboard_profile'))));
+</code></pre>
+
+We use the html helper, that does parse the prefix part and generates a nice correct url, namely: <strong>/dashboard/user/profile</strong>
+
+The html helper does check for any prefixes in the routing and generates the right url.
+Combining the form->create and the html->url we get the right url.
+

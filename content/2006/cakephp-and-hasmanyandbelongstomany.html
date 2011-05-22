@@ -1,0 +1,155 @@
+---
+kind: article
+created_at: 2006/11/30
+title: CakePHP and HasManyAndBelongsToMany
+excerpt: Figuring out has and belongs to many for CakePHP.
+tags:
+- CakePHP
+---
+
+<p>CakePHP is a brilliant framework, but the documentation (like Ruby on Rails) is not always very clear. I usually find it more usefull to get an example then a description.</p>
+<p>Now that i've finally figured it out here's an example to fill a selectbox with values from an associated table.</p>
+<p>&nbsp;</p>
+<p>We have to models, Workshop and Workareas. One workshop can have several workareas and one workarea can have several workshops, that means Has and belongs to many for Cake!</p>
+<p>&nbsp;</p>
+<p>We begin with the Workarea model:</p>
+<pre><code allow="default">
+<?php
+class Workarea extends AppModel
+{
+ var $name = 'Workarea';
+
+  var $hasAndBelongsToMany = array('Workshop'          =>
+         array('className'             => 'Workshop',
+           'joinTable'             => 'workshop_workarea',
+           'foreignKey'            => 'workarea_id',
+           'associationForeignKey' => 'workshop_id',)
+    );
+}
+?>
+</code></pre>
+<p></p>
+<p>Then we have the workshop model</p>
+<pre><code allow="default">
+<?php
+class Workshop extends AppModel
+{
+ var $name = 'Workshop';
+
+  var $hasAndBelongsToMany = array('Workarea'          =>
+        array('className'             => 'Workarea',
+               'joinTable'             => 'workshop_workarea',
+               'foreignKey'            => 'workshop_id',
+               'associationForeignKey' => 'workarea_id',)
+  );
+
+}
+?>
+</code></pre>
+
+<p></p>
+<p>Now here comes the difficult part, the Controller. Since it's a part of a project of mine i'm only pasting the edit action.
+It should give you enough to make the other actions too.
+</p>
+
+
+<pre><code allow="default">
+<?php
+class WorkshopsController extends AppController
+{
+var $name = 'Workshops';
+var $helpers = array('Html', 'Javascript');
+
+
+  function edit($id = null)
+  {
+    // Populate the workareas
+    $this->set('workareas',$this->Workshop->Workarea->generateList());
+
+    // If there's no data (i.e. new page)
+    if (empty($this->data))
+    {
+      $this->Workshop->id = $id;
+      $this->data = $this->Workshop->read();
+      // Get the selected workareas from the database
+      $this->set('selected_workareas', $this->getSelectedItems($this->data['Workarea']));
+    }
+    // If there is data
+    else
+    {
+      // Check if the admin has selected a workarea
+      if (empty($this->params['data']['Workarea']['Workarea'])) {
+
+          // He didn't so lets show some errors
+          $this->Workshop->invalidate('Workarea');
+          $this->set('workareaInvalid', true);
+          $this->set('selected_workareas', null);
+
+      }
+      // He did
+      else {
+      // Populate the workareas from the users's input in case there's a problem saving the page (i.e. there are errors)
+      // if the lack of workareas triggerd the problem for saving the page do not populate the workareas (he didn't select them anyways)
+      $selected_workareas = (!empty($this->params['data']['Workarea']['Workarea'])) ? $this->params['data']['Workarea']['Workarea'] : null;
+
+      // There is a "magic" array_flip wich makes the selected workareas the right ones and not the array positions (it's a long story)
+      $this->set('selected_workareas',array_flip($selected_workareas));
+      }
+      // If we can save the data
+      if($this->Workshop->save($this->data))
+      {
+          // Redirect to the index
+          $this->Session->setFlash('Training is gewijzigd.');
+          $this->redirect('/workshops/index');
+        }
+      // If not
+      else
+      {
+          // Show the errors and a nice flashy message
+          $this->Session->setFlash('Het formulier bevat fouten, corrigeer deze en probeer het opnieuw.');
+          $this->render();
+      }
+
+
+
+    }
+  }
+
+}
+?>
+</code></pre>
+<p></p>
+<p>The key is that you have to use an array_flip() to make the fields selected when the page is submitted and there's an error. If you don't use array_flip the array is like: [0]=>1, [1]=>4  and so on. The select uses the indexes (the 0 and the 1) instead of the 1 and the 4. array_flip fixes that.</p>
+<p>There's also a function in the app_controller wich prepares the aray you have gotten from the database so it can select the fields as they came from the database.</p>
+<pre><code>
+  // A function with uses the input from the hasmanyandbelongsto query and turns it into something usefull (an array with the ID's as the first key and the value as the second to be used in a selectbox)
+  function getSelectedItems( $data, $nameField = 'name'){
+    $return = array();
+    foreach ($data as $row){
+      $return[$row['id']] = $row[ $nameField ];
+    }
+  return $return;
+  }
+</code></pre>
+<p>And finally the view (well at least the most important part of it)</p>
+<pre><code>
+   <fieldset id="workarea" class="form_block">
+       <label for="workarea_workarea" class="label">Werkgebieden:</label>
+     <p class="uitleg">Selecteer de werkgebieden. Houdt control ingedrukt om meerdere werkgebieden te selecteren.</p>
+       <?php if (isset($workareaInvalid))  {
+       echo $html->selectTag('Workarea/Workarea',$workareas, $selected_workareas, array('multiple'=>'1','class'=>'multiple form_error'), null, null);
+    }else{
+       echo $html->selectTag('Workarea/Workarea',$workareas, $selected_workareas, array('multiple'=>'1','class'=>'multiple'), null, null);
+
+    }
+     ?>
+
+          <?php echo $html->tagErrorMsg('Workshop/Workarea', 'Er moet minimaal één werkgebied gekozen worden.')?>
+   </fieldset>
+</code></pre>
+<p>The if then else function is there because you can't use $this->Workshop->invalidate('Workarea'); The workarea field is called ['Workarea']['Workarea'] instead of ['Workshop']['Workarea']. Thats why i set another value and check it in the view.
+If that value $workareaInvalid is true, then show the select with the error class, if not then i show the select without it.
+</p>
+<p></p><p>
+Now i'm shure there are some things about my code that i should have done another way, but i spend a lot of hours searching for the awnsers in the google groups and i'm tired right now.
+</p>

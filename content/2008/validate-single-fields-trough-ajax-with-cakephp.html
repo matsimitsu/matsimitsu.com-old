@@ -1,0 +1,244 @@
+---
+kind: article
+created_at: 2008/01/23
+title: Validate single fields trough AJAX with CakePHP
+excerpt: An easy way to validate a single field of a model trough AJAX in CakePHP.
+tags:
+- CakePHP
+---
+
+Today i was busy making a form for a signup procedure and i tought: "Lets make it a bit easier for the customer by adding some real-time validation". Of course this is a piece of cake with.. <a href="http://cakephp.org" title="CakePHP">Cake</a>!
+
+<h3>Enabling JavaScript</h3>
+
+First we need to load the <a href="http://script.aculo.us" title="Scriptaculous">script.aculo.us</a> libaries.
+Download them from <a href="http://script.aculo.us/downloads" title="Download script.aculo.us">script.aculo.us</a>, extract the files and copy prototype.js in /lib to your cake js folder (app/webroot/js) and all the files in /bin to the cake js folder.
+
+
+Then add the following to your default.ctp (app/views/layouts/default.ctp (if it's not there create one))
+
+<pre><code>
+<?php
+if(isset($javascript))
+{
+    echo $javascript->link('prototype');
+    echo $javascript->link('scriptaculous.js');
+}
+?>
+</code></pre>
+
+
+And in your controller (app/controllers/customers_controller.php) load JavaScript (note: you could also put this in app_controller to make it available in every view instad of putting it in every single controller).
+
+<pre><code>
+  var $helpers = array('Html', 'Javascript', 'Form', 'Ajax');
+</code></pre>
+
+
+
+<h3>Enabling RequestHanlder</h3>
+
+Now we need to make shure we serve the right content with the right request (return xml if it's requested).
+Add the following to your routes file (app/config/routes.php)
+
+<pre><code>
+  Router::parseExtensions();
+</code></pre>
+
+Now open your controller (app/controllers/customers_controller.php) and add the following line:
+
+<pre><code>
+  var $components = array('RequestHandler');
+</code></pre>
+
+We can now use the power of requesthandler \0/
+
+
+<h3>Model</h3>
+
+Lets make some basic validation rules: (app/models/customer.php)
+
+<pre><code>
+var $validate = array(
+     'initials'   =>  array('length' => array('rule' => array('minLength', '1'), 'message'=>'This field cannot be empty')),
+    'lastname'   =>  array('length' => array('rule' => array('minLength', '3'), 'message'=>'This field cannot be empty'))
+  );
+</code></pre>
+
+
+Now lets make some actions!
+
+<h3>Controller</h3>
+
+The add action in the controller (app/controllers/customers_controller.php)
+<pre><code>
+function add() {
+  // Ajax validation of single fields, check if xml is asked
+  if ($this->RequestHandler->ext =='xml') {
+    // If we have data, process it. If not send back an error.
+    if(!empty($this->data['Customer'])){
+      $this->cleanUpFields();
+      // Validate the customer, if it's ok, show no errors. If not ok, show errors
+      if ($this->Customer->create($this->data['Customer']) && $this->Customer->validates()) {
+                $this->set('error', '0');
+        $this->set('message', '');
+            } else {
+                $errorMessages = $this->validateErrors($this->Customer);
+        $this->set('error', '1');
+                $this->set('message', array_shift($errorMessages));
+            }
+    } else {
+      $this->set('error', '1');
+      $this->set('message', 'No data sent');
+    }
+  } else {
+    // Normal validation and save
+    if(!empty($this->data)) {
+      $this->cleanUpFields();
+      $this->Customer->create($this->data);
+      if($this->Customer->save($this->data)) {
+        $this->redirect(array('action'=>'thankyou'));
+      } else {
+        $this->Session->setFlash('Woot, something went wrong, please check the red fields!');
+      }
+    }
+  }
+}
+</code></pre>
+
+What we did is check if a xml file was requested by the client (this is what we use in the ajax request), if so, check only a single field and return if there is an error or not.
+
+
+<h3>The XML views</h3>
+
+In your customers view folder (app/views/customers) create a new folder named xml. In there create a new file called add.ctp.
+This is the file the controller uses when it wants to send back a xml view.
+
+<pre><code>
+<validation>
+  <error><?php echo $error; ?></error>
+  <message><?php echo $message;?></message>
+</validation>
+</code></pre>
+
+We also need to create a layout for the xml view, in the layouts folder there should be a folder named xml (app/views/layouts/xml)
+Open it and create a file called default.ctp with the following content
+
+<pre><code>
+<?php header('Content-type: text/xml'); ?>
+<?php echo $content_for_layout; ?>
+</code></pre>
+
+
+
+<h3>The add view</h3>
+
+Now lets make a form (app/views/customers/add.ctp)
+
+<pre><code>
+
+<?php echo $form->create('Customer');?>
+
+<fieldset>
+<legend>Name</legend>
+  <span>
+    <?php echo $form->input('initials', array('label'=>'Initials', 'maxlength'=>'8', 'size'=>'8', 'class'=>'req', 'div'=>false)); ?>
+  </span>
+  <span>
+    <?php echo $form->input('lastname', array('label'=>'Last name', 'size'=>'20', 'class'=>'req', 'div'=>false)); ?>
+  </span>
+</fieldset>
+<?php echo $form->end('Submit'); ?>
+
+</code></pre>
+
+This is basically a simple form, but note the 'class'=>'req', we are going to use this to let javascript know wich fields to check (this might be handy if you don't want to validate very single field in the form)
+
+
+
+<h3>JavaScript</h3>
+
+Now the javascript code (place it at the end of app/views/customers/add.ctp)
+
+<pre><code>
+<script type="text/javascript">
+  // Look for all req fields and put them in an array
+  requiredFields = document.getElementsByClassName('req');
+
+  // Loop the array and place observers on the req fields
+     for(i=0; i<requiredFields.length;i++){
+    new Form.Element.Observer(requiredFields[i], 2, liveActionCallback);
+  }
+
+  // Callback if something happens in one of the req fields
+  function liveActionCallback( element, value ) {
+
+    // Funcion for handling the response XML file wich the Ajax.Request below gets for us
+    var handlerFunc = function(t) {
+        var xmlDoc = t.responseXML.documentElement;
+      // Check if there is an error
+      if(xmlDoc.getElementsByTagName('error')[0].firstChild.nodeValue == '1'){
+        // You could do all kinds of stuff here, i'm just adding a classname to the form field wich makes it red
+         $(element).addClassName('form-error');
+      } else {
+        // if there is no error, remove the req class
+        $(element).removeClassName('req');
+      }
+    }
+
+
+    // Create a new ajax request, note the .xml added to the url, it makes shure we get an xml back from the controller.
+
+    new Ajax.Request('/regwiz/customer.xml', {
+          asynchronous:true,
+          evalScripts:true,
+          parameters:Form.Element.serialize(element),
+          onSuccess:handlerFunc
+        }
+      );
+  }
+</script>
+</code></pre>
+
+<h3>CSS</h3>
+
+As you can see i'm not doing much if there is an error (like not using the error message, but you could of course append a div with the error message, or alert it or... well whatever you want ;)).
+
+To make it complete, here's the CSS file is used.
+
+<pre><code>
+/* ----- REQUIRED ----- */
+
+form .req{
+  border-right: 2px solid red;
+}
+
+form .form-error{
+  display:block !important;
+  background-color: #FFDFDF !important;
+  border:1px dotted red;
+}
+
+</code></pre>
+
+
+
+<h3>Example</h3>
+
+A few images with the different states: (note labels are in Dutch ;))
+<img src='http://blog.matsimitsu.nl/wp-content/uploads/2008/01/pre.jpg' alt='pre'  width="533" height="66"/>
+
+The field with the .req class (it creates a red right border, that disappears when the field is valid)
+
+A valid field:
+<img src='http://blog.matsimitsu.nl/wp-content/uploads/2008/01/valid.jpg' alt='valid field'  width="533" height="63"/>
+
+And an invalid field:
+<img src='http://blog.matsimitsu.nl/wp-content/uploads/2008/01/invalid.jpg' alt='invalid'  width="533" height="64"/>
+
+And the ajax request (from <a href="http://www.bugzilla.org/" title="Bugzilla home">Bugzilla</a>)
+<img src='http://blog.matsimitsu.nl/wp-content/uploads/2008/01/ajax.jpg' alt='Ajax request'  width="353" height="145"/>
+
+And that's basically it. If you don't understand everything, please read the comments or try changing stuff :)
+
+

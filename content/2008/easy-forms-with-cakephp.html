@@ -1,0 +1,44 @@
+---
+kind: article
+created_at: 2008/09/08
+title: Easy forms with CakePHP
+excerpt: Simple way of automatically generating forms in CakePHP.
+tags:
+- CakePHP
+---
+
+Last night i was thinking about the fact that in some cases i can't use bake to re-bake my views to contain a new field for example. CakePHP also wants you to not write the same code twice, but what about the views. Every time you add a field to your model, you either need to re-bake your views, or update both the edit and add template files. You could use $form->inputs(); but the helper creates form fields for database fields you probably want to keep hidden (_count fields for example).
+
+I can think of two solutions for this problem, namely.
+
+1. Go the partial way (like rails uses it). Basically you make an element with all the form fields you want to display and use the $this->renderElement in the view to display the form fields.
+
+2. Define public fields in your controller and use those. An example below:
+
+post has the following fields:
+id, title, content, created, comments_count.
+
+we only want the user to be able to edit the title, content and maybe the created fields.
+
+in our controller we create a new var: "publicFields"
+
+[sourcecode language='php']
+var $publicFields = array('title', 'content', 'created');
+[/sourcecode]
+
+you can set this var in the beforeRender callback like this: (controller)
+
+[sourcecode language='php']
+function beforeRender(){
+$this->set('publicFields', $this->publicFields);
+[/sourcecode]
+
+and in your view you render the inputs using the inputs function of the form controller like:
+[sourcecode language='php']
+<code>$form->inputs($publicFields);</code>
+[/sourcecode]
+
+this way you only have to add a new field in your database and in the $publicFields array and all your forms update automagically.
+
+What do you use to reduce the amount of code you need to edit for a change in the database?
+

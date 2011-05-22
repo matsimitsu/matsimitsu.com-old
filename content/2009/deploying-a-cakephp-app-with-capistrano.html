@@ -1,0 +1,93 @@
+---
+kind: article
+created_at: 2009/01/28
+title: Deploying a CakePHP app with Capistrano
+excerpt: Deploy any PHP app with Capistrano, example uses CakePHP.
+tags:
+- CakePHP
+- Capistrano
+---
+
+Deploying a CakePHP app with Capistrano
+
+During my internship i was working on a large project and at the end of the process it became more and more difficult to keep the development version and the live version in sync while maintaining different configurations.
+
+A couple of colleagues used Capistrano for their Rails projects and i tried to modify Capistrano so that it would work with CakePHP.
+
+<h3>Password-less login</h3>
+First we need to be able to login without providing a password <a href="http://oebfare.com/blog/2008/jan/29/login-ssh-without-password/">this guide from Brian Rosner</a> describes the steps to do this.
+The reason for this password-less login is that you don't have to provide a password when you deploy this way.
+
+<h3>Capistrano</h3>
+Next we need to get Capistrano. I work on a mac with OSX 10.5, witch has Capistrano built-in. If you have never updated this version of capistrano you might want to gem update your version.
+
+<h3>Folder structure</h3>
+<img src="http://blog.matsimitsu.nl/wp-content/uploads/2009/01/capistrano.png" alt="capistrano folder structure" title="capistrano"  class="alignnone size-medium wp-image-223"  width="297" height="622"/>
+The image above shows my folder structure. The <strong>current</strong> folder is actually a symlink to the latest deploy of my project. The <strong>logs</strong> is for my apache access and error logs and the <strong>releases</strong> folder contains the latest 10 releases deployed to the server.
+
+The <strong>shared</strong> folder contains files and folders that i want to use instead the ones i deploy. In my case i keep the /app/config folder here.
+
+<h3>Capfile</h3>
+In the root of my project folder i created a capfile (no extension)
+
+that contains the following code:
+
+<pre><code>
+load 'deploy' if respond_to?(:namespace) # cap2 differentiator
+role :web, 'example.com'
+ssh_options[:username] = 'notrootofcourse'
+ssh_options[:forward_agent] = true
+
+set :scm, :git
+set :scm_verbose, true
+set :repository, 'git@git.example.com:repository'
+set :branch, 'master'
+set :deploy_via, :remote_cache
+set :use_sudo, false
+set :application, 'application_name'
+set :deploy_to, "/data/webservers/#{application}/"
+
+namespace :deploy do
+  task :start do
+  end
+
+  task :stop do
+  end
+
+  task :restart do
+  end
+
+  desc <<-DESC
+    Symlinks shared configuration and directories into the latest release
+    Also clear persistent and model cache
+  DESC
+  task :finalize_update do
+    run "rm -rf #{latest_release}/app/config; ln -s #{shared_path}/app/config #{latest_release}/app/config"
+    run "rm -rf #{latest_release}/app/tmp/models/*"
+    run "rm -rf #{latest_release}/app/tmp/persistent/*"
+  end
+
+
+end
+
+namespace :tail do
+  task :default do
+    run "tail -f #{deploy_to}/logs/*.log"
+  end
+end
+
+</code></pre>
+
+The first lines of the Capfile set some global configuration options, like your ssh username that can login without providing a password, the (in my case git) repository to pull the latest release from and the name and path of the application.
+
+To make capistrano work with (Cake)PHP you need to overwrite all the default tasks that capistrano runs when deploying. Since i use apache and php, we don't need to restart the webserver, so we just create a :restart task that does nothing, the same goes for :start and :stop
+
+in the :finalize_update task i link the /config dir of my CakePHP app to the shared folder i described above. This way i always use the live configurations instead of my dev configs. Also, just to be sure, i remove the cached data.
+
+All there is to do is a "cap deploy" in the root folder of your project and capistrano will deploy the latest version to your server.
+
+This is of course just a simple example of a capistrano config and you can create your own folder structure and run your own commands.
+
+Besides deploying i also created a :tail namespace, witch tails my log files. This way i can do a "cap tail" to see what's going on with apache without logging in trough ssh. Other possible functions could be a "cap clearcache" to remove all the cache files.
+
+

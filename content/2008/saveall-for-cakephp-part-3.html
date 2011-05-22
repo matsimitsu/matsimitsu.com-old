@@ -1,0 +1,94 @@
+---
+kind: article
+created_at: 2008/06/18
+title: SaveAll for CakePHP (part 3)
+excerpt: Part 3 of everything SaveAll.
+tags:
+- CakePHP
+---
+
+Recently i needed to save multiple entries for the same model and i thought saveAll should do the trick.
+After trying some different approaches i found the right one. This approach can be used for both new entries and to update entries.
+
+
+<h3>Controller</h3>
+(/app/controller/tasks_controller.php)
+
+New entry:
+<pre><code>
+function add() {
+  if (!empty($this->data)) {
+    $this->Task->create();
+    if ($this->Task->saveAll($this->data)) {
+      $this->Session->setFlash('Tasks saved');
+      $this->redirect(array('action'=>'index'), null, true);
+    } else {
+      $this->Session->setFlash('Tasks could not be saved');
+      $this->redirect(array('action'=>'index'), null, true);
+    }
+  }
+}
+</code></pre>
+
+Edit entry:
+<pre><code>
+function edit($todo_id=null){
+  if (!empty($this->data)) {
+    if ($this->Task->saveAll($this->data['Task'])) {
+      $this->Session->setFlash('Tasks saved');
+      $this->redirect(array('action'=>'index'), null, true);
+    } else {
+      $this->Session->setFlash('Tasks could not be saved');
+      $this->redirect(array('action'=>'index'), null, true);
+    }
+  } else {
+    // Find ten tasks to edit
+    $tasks = $this->Task->findAll(null, null, null, 10);
+    $this->set('tasks', $tasks);
+  }
+}
+</code></pre>
+
+
+<h3>View</h3>
+
+For a new entry:
+<pre><code>
+<?php echo $form->create('Task');?>
+  <fieldset>
+     <legend><?php __('New Tasks');?></legend>
+  <?php
+    // Lets generate 10 task input fields
+    for(i=0;i<10;i++){
+      echo $form->input($i.'.name');
+    }
+  ?>
+  </fieldset>
+<?php echo $form->end('Submit');?>
+</code></pre>
+
+To edit entries:
+<pre><code>
+<?php echo $form->create('Task', array('url'=>array('action'=>'edit')));?>
+  <fieldset>
+     <legend><?php __('Edit Tasks');?></legend>
+  <?php
+
+    // Loop trough the ten tasks and create form fields. We need at least the ID to update a task.
+    $count = 0;
+    foreach($tasks as $task){
+    echo $form->input($count.'.id', array('value'=>$task['Task']['id']));
+    echo $form->input($count.'.name', array('value'=>$task['Task']['name']));
+    $count++;
+  }
+
+  ?>
+  </fieldset>
+<?php echo $form->end('Submit');?>
+</code></pre>
+
+
+<h3>How it works</h3>
+It's not much different from the previous saveAll parts, the only really big change is that the form field names are a bit different and you need to specify the right model/array to save in the controller ( the $this->Task->saveAll($this->data['Task']); part).
+
+

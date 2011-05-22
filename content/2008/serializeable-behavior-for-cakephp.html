@@ -1,0 +1,14 @@
+---
+kind: article
+created_at: 2008/10/09
+title: Serializeable behavior for CakePHP
+excerpt: Store an array of values in one field.
+tags:
+- CakePHP
+---
+
+For a project i'm working on i needed to serialize a number of arrays before they could be saved and since i don't like to serialize and un-serialize all those arrays in each controller action, i wrote a behavior to take care of this.
+
+It serializes all array data before it is saved into the database and when you do a find it will unserialize all data(including related model data).
+
+<a href='http://blog.matsimitsu.nl/wp-content/uploads/2008/10/serializeable.phps'>Download serializeable behavior</a>

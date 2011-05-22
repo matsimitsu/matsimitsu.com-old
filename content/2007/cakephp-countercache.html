@@ -1,0 +1,94 @@
+---
+kind: article
+created_at: 2007/12/15
+title: CakePHP Countercache
+excerpt: Keeps track of "child" model count.
+tags:
+- CakePHP
+---
+
+As i've seen a few questions about the countercache behavior in the irc channel (<a href="irc://irc.freenode.net/#cakephp" title="irc link for #CakePHP">irc://irc.freenode.net/#cakephp</a>) i've decided to make a quick tutorial.
+
+<h3>What is countercache</h3>
+CounterCache is used in <a href="http://www.rubyonrails.org/" title="Ruby on Rails">Ruby on Rails</a> to count the number of children a model has. Say we have a model called Project and this model hasMany Documents. It would be nice to know the number of Documents for a Project without doing a Count. Well countercache does exactly this.
+
+<h3>The database</h3>
+
+Lets use this table for projects:
+
+<pre><code>
+--
+-- Table structure for table `projects`
+--
+
+CREATE TABLE `projects` (
+  `id` int(11) NOT NULL auto_increment,
+  `name` varchar(255) NOT NULL default '',
+  `description` text NOT NULL,
+  `created` datetime default NULL,
+  `updated` datetime default NULL,
+  `documents_count` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+
+</code></pre>
+
+Note the documents_count column in the table Projects, this is where the behavior saves the count of the current number of documents.
+
+<h3>The models</h3>
+
+Project.php (/app/models/)
+
+<pre><code>
+<?php
+// Project model
+class Project extends AppModel
+{
+
+ var $name = 'Project';
+ var $hasMany = array('Document'=>array('dependent'=>true));
+}
+?>
+</code></pre>
+
+
+and the document:
+
+document.php (/app/models/)
+<pre><code>
+// Docment model
+<?php
+class Document extends AppModel
+{
+
+ var $name = 'Document';
+ var $belongsTo = array('Project');
+ var $actsAs = array('CounterCache');
+}
+
+?>
+
+</code></pre>
+
+
+<h3>How it works</h3>
+Note that the $actsAs is in the child model (in this case documents). This is because the behavior basically does a count on each beforeSave and beforeDelete and stores it in the parent's model as <models>_count, in this case documents_count. Note that the model name is pluralized, so it becomes document<strong>s</strong>_count instead of document_count.
+
+
+<h3>Where can i find the behavior?</h3>
+Since this feature is not implemented yet (note this post was written on december 15, 2007). You can get the behavior at the bakery on: <a href="http://bakery.cakephp.org/articles/view/countercache-or-counter_cache-behavior" title="Bakery link to CounterCache">http://bakery.cakephp.org/articles/view/countercache-or-counter_cache-behavior</a>.
+
+When the feature does get implemented, you could just use it like this:
+
+<pre><code>
+var $belongsTo = array(
+                        'Project' =>
+                            array('className'   => 'Project',
+                                'conditions'        => '',
+                                'order'             => '',
+                                'foreignKey'        => 'project_id',
+                                'counterCache'      => 'projects_count'
+                                )
+                        );
+</code></pre>
+

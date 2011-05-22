@@ -1,0 +1,63 @@
+---
+kind: article
+created_at: 2007/11/01
+title: Admin routes
+excerpt: Admin routes in Cakephp.
+tags:
+- CakePHP
+---
+
+I had some issues today with the admin routes in the new cake version.
+
+The problem was that i was using an admin route in the core (/app/config/core.php)
+<pre><code>/**
+ * Uncomment the define below to use CakePHP admin routes.
+ *
+ * The value of the define determines the name of the route
+ * and its associated controller actions:
+ *
+ * 'admin'     -> admin_index() and /admin/controller/index
+ * 'superuser' -> superuser_index() and /superuser/controller/index
+ */
+Configure::write('Routing.admin', 'dashboard');
+</code></pre>
+
+And in my routes file (/app/config/routes.php) i was using this:
+
+<pre><code>
+  Router::connect('/dashboard/', array('controller' => 'sites', 'action' => 'index', 'admin'=>'dashboard'));
+</code></pre>
+
+This didn't work out as planned, it gave an error about not beeing able to find a controller action (index(); instead of dashboard_index();
+
+Turns out that in the new version you need to use prefix instead of admin, so the line should be:
+
+<pre><code>
+  Router::connect('/dashboard/', array('controller' => 'sites', 'action' => 'index', 'prefix'=>'dashboard'));
+</code></pre>
+
+
+Then in my app_controller (/app/app_controller.php) i had a function to switch to the admin layout if it was called in the url, but this changed also.
+
+It used to be:
+
+<pre><code>
+  if (isset($this->params['dashboard'])) {
+    $this->layout = 'dashboard';
+  }
+
+</code></pre>
+
+But i had to change it to:
+
+<pre><code>
+  if (isset($this->params['prefix']) && $this->params['prefix'] == 'dashboard') {
+    $this->layout = 'dashboard';
+  }
+</code></pre>
+
+The reason for this is that it uses the prefix value from the routes file.
+If you use the first example (the one with $this->params['dashboard']) the dashboard layout will not be set if there is no / after dashboard in the url (http://mysite.com/dashboard), because $this->params['dashboard'] will be empty.
+Using the second example it will set the layout.
+
+I also check if the prefix is dashboard, because you could be using more then one prefix.

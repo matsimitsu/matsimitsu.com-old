@@ -71,8 +71,8 @@ def add_update_item_attributes
       item[:created_at] = item[:created_at].to_s if item[:created_at].is_a?(Date)
 
       # sets updated_at based on content change date not file time
-      change = changes.status(item[:content_filename], item[:created_at], item.raw_content)
-      item[:updated_at] = change[:updated_at].to_s
+      #change = changes.status(item[:content_filename], item[:created_at], item.raw_content)
+      item[:updated_at] = item[:created_at].to_s
     end
   end
 end
@@ -93,34 +93,9 @@ def item_by_identifier(identifier)
   items.find { |item| item.identifier == identifier }
 end
 
-#=> { 2010 => { 12 => [item0, item1], 3 => [item0, item2]}, 2009 => {12 => [...]}}
-def articles_by_year_month
-  result = {}
-  current_year = current_month = year_h = month_a = nil
-
-  sorted_articles.each do |item|
-    d = Date.parse(item[:created_at])
-    if current_year != d.year
-      current_month = nil
-      current_year = d.year
-      year_h = result[current_year] = {}
-    end
-
-    if current_month != d.month
-      current_month = d.month
-      month_a = year_h[current_month] = []
-    end
-
-    month_a << item
-  end
-
-  result
-end
-
 def is_front_page?
     @item.identifier == '/'
 end
-
 
 def n_newer_articles(n, reference_item)
   @sorted_articles ||= sorted_articles
@@ -149,7 +124,6 @@ def n_older_articles(n, reference_item)
     []
   end
 end
-
 
 def site_name
   @config[:site_name]

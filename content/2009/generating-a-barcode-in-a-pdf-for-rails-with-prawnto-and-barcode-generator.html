@@ -1,0 +1,26 @@
+---
+kind: article
+created_at: 2009/08/13
+title: Generating a barcode in a PDF for Rails with Prawnto and barcode-generator
+excerpt: A simple way of generating barcodes.
+tags:
+- Ruby on Rails
+---
+
+For a project i needed to generate a barcode image in a PDF invoice. I was already using Prawnto to generate the PDF and needed a way to generate a barcode image to use with Prawnto.
+
+After a few searches i found <a href="http://github.com/anujluthra/barcode-generator/tree/master">barcode-generator</a> from <a href="http://blog.anujluthra.com/">anujluthra</a>.
+
+Install the <a href="http://gbarcode.rubyforge.org/">gbarcode</a> gem and ImageMagic.
+
+if your are on OSX and get the following error: "sh: gs: command not found" then you don't have postscript installed. Install Postscript trough <a href="http://darwinports.com/">Port</a>. (port install postscript)
+
+I found out that Prawnto really likes absolute file system paths instead of relative image tags that barcode-generator returns, so i forked the project on GitHub and added a new option to return the file system path instead of an image tag.
+
+My fork can be found at: <a href="http://github.com/matsimitsu/barcode-generator/tree/master">http://github.com/matsimitsu/barcode-generator/tree/master</a> and can be installed as a plugin with:
+<code>script/install plugin git://github.com/matsimitsu/barcode-generator.git</code>
+
+To use this all in Prawnto use the following code:
+<code>
+pdf.image(barcode('FJJ4JD', :output_method => 'full_path'))
+</code>

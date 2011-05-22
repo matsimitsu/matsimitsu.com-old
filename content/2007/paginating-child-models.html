@@ -1,0 +1,146 @@
+---
+kind: article
+created_at: 2007/12/14
+title: Paginating child models
+excerpt: Simple pagination for child models in CakePHP.
+tags:
+- CakePHP
+---
+
+Sometimes you want to use pagination on a hasmany child of a model and, of course, CakePHP can handle this.
+
+
+Lets say we have a model Form that hasMany Topics.
+<img src='http://blog.matsimitsu.nl/wp-content/uploads/2007/12/relation.png' alt='relation graph'  width="347" height="124"/>
+
+<h3>Models</h3>
+First we set up the models (/app/models).
+
+forum.php
+<pre><code>
+<?php
+class Forum extends AppModel
+{
+ var $name = 'Forum';
+
+ var $hasMany = array(
+     'Topic' => array(
+      'dependent'    => true,
+      'order'      => 'Topic.created ASC'
+     )
+ );
+}
+?>
+</code></pre>
+
+and topic.php
+<pre><code>
+<?php
+class Topic extends AppModel
+{
+ var $name = 'Topic';
+ var $belongsTo = array('Forum');
+}
+?>
+</code></pre>
+
+<h3>Controllers</h3>
+
+Now if we go to the url /forums/view/1 we want to see all the topics that belong to this forum, but we also want to paginate them.
+Lets set up the forums controller (/app/controllers).
+
+forums_controller.php
+<pre><code>
+<?php
+class ForumsController extends AppController {
+  var $name = 'Forums';
+        var $helpers = array('Time' );
+  var $paginate = array('limit' => 25, 'page' => 1);
+
+  function view($id = null ) {
+    if ($id && is_numeric($id)) {
+      $this->set('forum', $this->Forum->findById($id));
+      $this->set('topics', $this->paginate('Topic', array('Topic.forum_id'=>$id)));
+    } else {
+      $this->Session->setFlash('Invalid action');
+      $this->redirect($this->referer());
+    }
+  }
+}
+?>
+</code></pre>
+
+
+<h3>What it does</h3>
+
+Lets go trough the code. In the model you specify the relations to other models. A forum hasMany topics and a Topic belongsTo a forum, nothing new so far.
+In the controllers there are a few things that stand out.
+
+First we add pagination to the controller and set the number of pages and the items per page.
+<pre><code>
+var $paginate = array('limit' => 25, 'page' => 1);
+</code></pre>
+
+In the view function we set the value forum to be the result of the findById and then the magic happens.
+We just call $this->paginate('Topic', conditions), in this case $this->paginate('Topic', array('Topic.forum_id'=>$id));
+Because we defined the relation in the model, Cake knows that we can also paginate Topics in the forums controller.
+
+But we can also do a few things more.
+
+What if you would like to order the topics the other way around, only for this action. Instead of changing the hasMany option 'order', you could also set it in the controller like this.
+
+forums_controller.php
+<pre><code>
+function view($id = null ) {
+  if ($id && is_numeric($id)) {
+    $this->set('forum', $this->Forum->findById($id));
+    $this->paginate['order']='Topic.created ASC';
+    $this->set('topics', $this->paginate('Topic', array('Topic.forum_id'=>$id)));
+  } else {
+    $this->Session->setFlash('Invalid action');
+    $this->redirect($this->referer());
+  }
+}
+</code></pre>
+
+We basically add a new option to the $this->paginate array. Note that this is done in the action function. If you do this in the controller like below you get errors if you want to use pagination for the forums itself
+(like in a index action $this->paginate('Forum');).
+
+forums_controller.php
+<pre><code>
+var $paginate = array('limit' => 25, 'page' => 1, 'order'=>'Topic.created ASC');
+</code></pre>
+
+
+<h3>The view</h3>
+The view is basically like any other view with pagination, but i'll put it down here anyway ;)
+
+view.ctp (/app/views/forums/)
+<pre><code>
+<h2>Forum</h2>
+<p>Welcome to the forum "<?php echo $forum['Forum']['title']; ?>".</p>
+<?php if(isset($topics)) { ?>
+<?php echo $html->link('Add a topic', array('controller'=>'topics', 'action'=>'add', 'id'=>$forum['Forum']['id']), null, false, false);?>
+<table>
+  <tr class="tr_header">
+    <td class="td_header_topic">Title</td>
+    <td class="td_header_long">Created</td>
+  </tr>
+  <?php foreach ($topics as $topic): ?>
+  <tr>
+    <td>
+      <?php echo $topic['Topic']['title']; ?>
+    </td>
+    <td>
+      <?php echo $time->timeAgoInWords($topic['Topic']['created']); ?>
+    </td>
+  </tr>
+  <?php endforeach; ?>
+</table>
+  <?php echo $paginator->prev(); ?>
+  <?php echo $paginator->numbers(); ?>
+  <?php echo $paginator->next(); ?>
+<?php }else{ ?>
+<p>There are no topics available at the moment, come back soon!</p>
+<?php } ?>
+</code></pre>

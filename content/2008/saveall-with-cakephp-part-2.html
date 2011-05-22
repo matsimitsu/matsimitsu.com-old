@@ -1,0 +1,145 @@
+---
+kind: article
+created_at: 2008/01/07
+title: SaveAll with CakePHP (part2)
+excerpt: Part 2 of everything SaveAll for CakePHP.
+tags:
+- CakePHP
+---
+
+Since the new beta release for CakePHP there is a nice feature called saveAll and, like the name says, it saves all model data in a form. What this means is that you don't have to do nasty stuff in the controllers (like looping) and it saves related model data automagically!
+
+Lets make a more advanced todo list to demonstrate.
+
+
+<h3>Tables</h3>
+Todo hasMany Tasks.
+
+First we need a table named todos.
+<pre><code>
+CREATE TABLE `todos` (
+  `id` int(11) NOT NULL auto_increment,
+  `name` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+</code></pre>
+
+We also need a table tasks
+
+<pre><code>
+CREATE TABLE `tasks` (
+  `id` int(11) NOT NULL auto_increment,
+  `todo_id` int(11) NOT NULL default '0',
+  `name` varchar(255) NOT NULL default '',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
+</code></pre>
+
+
+
+
+<h3>Models</h3>
+
+First we create the model todo (in /app/models/todo.php)
+
+<pre><code>
+<?php
+class Todo extends AppModel
+{
+ var $name = 'Todo';
+ var $hasMany = array('Task', array('dependent'=>true));
+}
+?>
+</code></pre>
+
+
+Now we create the model task (in /app/models/task.php)
+<pre><code>
+<?php
+class Task extends AppModel
+{
+ var $name = 'Task';
+ var $belongsTo = array('Todo');
+}
+?>
+</code></pre>
+
+
+
+<h3>Controller</h3>
+Next we set up the tasks controller (in /app/controller/tasks_controller.php)
+<pre><code>
+<?php
+class TasksController extends AppController {
+  var $name = 'Tasks';
+  var $paginate = array('limit' => 50, 'page' => 1);
+
+  function index(){
+    $this->set('tasks', $this->paginate('Task'));
+  }
+
+  function add() {
+    if (!empty($this->data)) {
+      $this->cleanUpFields();
+      $this->Task->create();
+      if ($this->Task->saveAll($this->data)) {
+        $this->Session->setFlash('List saved');
+        $this->redirect(array('action'=>'index'), null, true);
+      } else {
+        $this->Session->setFlash('List could not be saved');
+        $this->redirect(array('action'=>'index'), null, true);
+      }
+    }
+  }
+
+}
+?>
+</code></pre>
+
+
+You can see that there is nothing different here except for the $this->Task->saveAll($this->data);
+That is where most of the magic happens. The other magic is in the views, lets look at add.ctp
+
+
+<h3>Views</h3>
+
+(/app/views/tasks/add.ctp)
+<pre><code>
+<div class="todos form">
+<?php echo $form->create('Task');?>
+  <fieldset>
+     <legend><?php __('Add Todo');?></legend>
+  <?php
+    echo $form->input('Todo.name');
+  ?>
+  </fieldset>
+  <fieldset>
+     <legend><?php __('Add Tasks for todo');?></legend>
+  <?php
+    echo $form->input('Task.name');
+  ?>
+  </fieldset>
+<?php echo $form->end('Submit');?>
+</div>
+</code></pre>
+
+
+<h3>The result</h3>
+
+If you try to save a task with a todo you get the following result:
+<pre><code>
+4  INSERT INTO `todos` (`name`) VALUES ('My todo List')
+5  SELECT LAST_INSERT_ID() AS insertID
+6  INSERT INTO `tasks` (`todo_id`,`name`) VALUES (135,'My first task')
+</code></pre>
+
+As you can see, the following happens:
+<ul>
+<li>The todo gets saved</li>
+<li>The insert id of the todo is retrieved from the database</li>
+<li>Now the task gets saved with the todo_id that was just retrieved from the database</li>
+</ul>
+
+The result is a successfully saved model Todo with one task attached to it.
+
+
