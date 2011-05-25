@@ -137,6 +137,14 @@ def pretty_time(time)
   Time.parse(time).strftime("%b %d, %Y") if !time.nil?
 end
 
+def article_time_day(time)
+  Time.parse(time).strftime("%d") if !time.nil?
+end
+
+def article_time_month(time)
+  Time.parse(time).strftime("%b") if !time.nil?
+end
+
 def featured_count
   @config[:featured_count].to_i
 end
