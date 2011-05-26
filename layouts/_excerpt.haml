@@ -1,7 +1,10 @@
 ---
 ---
 %article.excerpt
-  %h1
-    %a{:href => route_path(item)}= item[:title]
-
-  %p= item[:excerpt] || "!!! Missing excerpt metadata for <code>#{item[:file].path}</code>"
+  %header
+    %h1
+      %a{:href => route_path(item)}= item[:title]
+    %time{:datetime => item[:created_at]}
+      %span.month= article_time_month(item[:created_at])
+      %span.day= article_time_day(item[:created_at])
+  %p.excerpt= item[:excerpt]

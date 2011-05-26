@@ -18,19 +18,17 @@
     -# needed since some content render <pre> blocks
     - content = find_and_preserve(yield)
     %header
-      .wrap
-        %nav
-          %ul
-            %li
-              %a(href='/') Home
-            %li
-              %a(href='/about.html') About
-            %li
-              %a(href='/projects.html') Projects
-            %li
-              %a(href='/blog') Blog
-        %h1.logo Matsimitsu
-        %div.subtext Personal weblog of Robert Beekman
+      %h1.logo
+        %a{:href => '/'} Matsimitsu
+      %h2.subtext
+        %span Personal weblog of Robert Beekman
+
+      %nav
+        %ul
+          %li
+            %a(href='/') Home
+          %li
+            %a(href='/archives.html') Blog
     #main
       .wrap
         - if @item[:kind] == 'article'

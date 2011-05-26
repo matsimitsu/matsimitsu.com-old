@@ -26,7 +26,7 @@ google_analytics:
 site_name: Matsimitsu
 
 # number of full featured posts to display on front
-featured_count: 0
+featured_count: 2
 
 # number of excerpted posts to display on front
 excerpt_count: 6

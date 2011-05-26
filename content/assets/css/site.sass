@@ -1,26 +1,201 @@
+@import url("http://fonts.googleapis.com/css?family=Arvo")
+@import url("http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz")
+@import compass
+@import compass/reset
+@include reset-html5
+@import compass/css3
+@import compass/typography/text/replacement
+
+@mixin data-uri-bg($image, $properties)
+  background: inline-image($image) $properties
+  *background: url($image) $properties
+
+$font-color: #363636
+$link-color: blue
+$font-family: "DroidSerif", Georgia, serif
+$font-size: 12px
+$line-height: 18px
+
+html,
+body
+  width: 100%
+  height: 100%
+
+html
+  overflow-y: scroll
 
 body
+  font-family: $font-family
+  font-size: $font-size
+  line-height: $line-height
+  color: $font-color
+  background: #f7f7f7 url('/assets/images/main_bg.png') top center no-repeat
+
+a, a:hover, a:active
+  text-decoration: none
+  font-weight: bold
+  color: $font-color
+
+h2
+  font-size: 1.2em
+  padding-top: 10px
+  font-weight: bold
+
+h3
+  padding-top: 5px
+  font-weight: bold
+
+p
+  margin-bottom: 18px
 
 header
+  height: 200px
+  text-transform: uppercase
+
   nav
-    height: 34px
+    background-color: #363636
+    height: 35px
+    color: white
+    padding-top: 10px
 
     ul
       text-align: center
       li
         display: inline
+        a, a:hover
+          font-size: 13px
+          line-heigth: 20px
+          color: white
+          padding: 10px 20px 0px 20px
+
   h1.logo
-    background: url('/assets/images/logo.png') center no-repeat
-    text-indent: -999999px
+    position: absolute
+    top: 70px
+    left: 0
+    width: 100%
     height: 54px
+    text-align: center
+    a
+      background: url('/assets/images/logo.png') center no-repeat
+      text-indent: -999999px
+      width: 218px
+      height: 54px
+      display: block
+      margin: 0px auto
 
-  div.subtext
-    background: url('/assets/images/subtext.png') center no-repeat
-    text-indent: -999999px
-    height: 25px
+  h2.subtext
+    position: absolute
+    top: 130px
+    width: 100%
+    text-align: center
+    span
+      background: url('/assets/images/subtext.png') center no-repeat
+      text-indent: -999999px
+      width: 950px
+      height: 25px
+      display: block
+      margin: 0px auto
 
+footer
+  margin-top: 20px
+  background: url('/assets/images/footer_bg.png') repeat-x
+  height: 71px
+  color: #f3f3f3
+
+  .wrap
+    text-align: center
+    background: transparent
+    p
+      background: url('/assets/images/footer_logo.png') left no-repeat
+      padding: 30px 0 0 150px
+      margin: 0px auto
+      display: block
+      width: 250px
+      height: 40px
+      a, a:hover, a:active, a:visited
+        color: #f3f3f3
 .wrap
   margin: 0 auto
   position: relative
   padding: 0 10px
   width: 950px
+
+#main
+  overflow: hidden
+article
+  width: 670px
+  font-size: 15px
+  line-height: 25px
+
+  header
+    position: relative
+    height: 100px
+    background: transparent
+
+    h1
+      margin-left: 85px
+      font-family: "Yanone Kaffeesatz", sans
+      font-size: 35px
+      font-weight: bold
+      padding-top: 15px
+
+    p.excerpt
+      margin-left: 85px
+
+    time
+      font-family: "Yanone Kaffeesatz", sans
+      background: url('/assets/images/time_bg.png') center no-repeat
+      display: block
+      position: absolute
+      top: 0
+      left: 0
+      width: 74px
+      height: 74px
+
+      span.month
+        position: absolute
+        top: 10px
+        width: 100%
+        text-align: center
+        font-size: 20px
+
+      span.day
+        position: absolute
+        top: 28px
+        width: 100%
+        text-align: center
+        font-size: 32px
+
+  img
+    padding: 5px
+    margin-bottom: 15px
+    +box-shadow(#333333 0px 2px 5px)
+
+  .gist
+    font-size: 0.8em
+    line-height: 1.1em
+
+section#latest_posts
+  margin-top: 20px
+  background: url('/assets/images/latest_blogposts_header.png') top no-repeat
+  padding-top: 35px
+  overflow: auto
+
+article.excerpt
+  width: 470px
+  float: left
+
+  header
+    height: auto
+
+    h1
+      font-size: 22px
+      margin-left: 34px
+      padding-top: 10px
+
+  time
+    width: 30px
+    background: transparent
+
+  p
+    margin-left: 40px

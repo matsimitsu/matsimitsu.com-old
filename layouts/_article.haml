@@ -5,13 +5,14 @@
 
 %article.article
   %header
+    %h1
+      - if is_embedded
+        %a{:href => route_path(item)}= item[:title]
+      - else
+        = item[:title]
+    %p.excerpt= item[:excerpt]
     %time{:datetime => item[:created_at]}
-      = article_time_month(item[:created_at])
-      %span= article_time_day(item[:created_at])
-  %h1
-    - if is_embedded
-      %a{:href => route_path(item)}= item[:title]
-    - else
-      = item[:title]
+      %span.month= article_time_month(item[:created_at])
+      %span.day= article_time_day(item[:created_at])
 
   != content || partial(item)
