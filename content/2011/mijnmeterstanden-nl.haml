@@ -1,0 +1,42 @@
+---
+title: Mijnmeterstanden.nl
+tags: [dutch, energy usage]
+created_at: 2011/11/12
+kind: article
+excerpt: Keeping track of my energy usage
+---
+%h2 Why?
+%p
+  Since i got a new appartment and energy usage is not included in the bill i became slightly obsessed with how much i was using and honestly i had no idea!
+
+%p
+  I wanted to use the arduino to keep track of my usage by reading the gauges on the electricity, water and gas meter. This turned out quite a bit harder then i tought it would so enter plan 2:
+  %a{:href => 'http://mijnmeterstanden.nl'} mijnmeterstanden.nl
+%p
+  It's a website that lets you track your energy usage by sending a reminder every month. Instead of opening the mail on your computer and forgetting about it, my goal is to make the site (especially the entering data part) mobile accessible so you can fill out the gauges directly from the basement/wherever your electricity gauges are.
+
+%h2 Bootstrap
+%p
+  %img{:src => '/assets/posts/meterstanden-nl/homepage.jpg'}
+
+%p
+  As you can see the app is built with
+  %a{:href => 'http://twitter.github.com/bootstrap/'} Twitter bootstrap
+  It is one of the best decisions i made about the app. In just a couple of hours i was able to crank out a decent looking site that would have taken me days otherwise (i can <strong>NOT</strong> design at all!)
+
+%p
+  Twitter bootstrap has pretty much every element that you need in an app covered and laying out the app is a matter of picking the right elements and styling them in the Ruby on Rails app. The structure of bootstrap is easy to understand and integrates really well with the Rails asset pipeline.
+
+%h2 Other tools
+%p
+  Other things i used to make the app are: MongoDB, simple-form (with a fix so it outputs the twitter bootstrap html structure), automated testing with capybara/selenium and unit tests with rspec and depoyment with capistrano.
+
+%p
+  Total development time is about 5 hours and 2 hours to get everything deployed. (Turns out deploying a ruby 1.9.2 app with standalone passenger proxied trough apache on ubuntu is quite the bitch to set up.)
+
+%p
+  %img{:src => '/assets/posts/meterstanden-nl/overview.jpg'}
+
+%h2 Bootstrapping an app
+%p
+  I beleive that with tools like twitter bootstrap and mongodb we're finally at a stage where you can crank out a project in no-time.

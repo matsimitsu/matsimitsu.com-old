@@ -36,6 +36,10 @@ a, a:hover, a:active
   font-weight: bold
   color: $font-color
 
+h1
+  font-family: "Yanone Kaffeesatz", sans
+  font-size: 35px
+
 h2
   font-size: 1.2em
   padding-top: 10px
@@ -56,14 +60,21 @@ header
     background-color: #363636
     height: 35px
     color: white
-    padding-top: 10px
 
     ul
       text-align: center
+
       li
-        display: inline
+        display: inline-block
+        padding: 0px 20px 0px 20px
+        height: 35px
+
+        &.active
+          background: transparent url('/assets/images/menu_active.png') bottom center no-repeat
+
         a, a:hover
-          font-size: 13px
+          font-weight: normal
+          font-size: 15px
           line-heigth: 20px
           color: white
           padding: 10px 20px 0px 20px
@@ -199,3 +210,18 @@ article.excerpt
 
   p
     margin-left: 40px
+
+.archives
+  margin-top: 20px
+  overflow: hidden
+  ul
+    width: 460px
+    li
+      article.excerpt
+        float: none
+
+  ul.left
+    float: left
+  ul.right
+    float: right
+

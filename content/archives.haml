@@ -6,7 +6,11 @@ is_hidden: true
 %h1 Archives
 
 .archives
-  %ul
-    - sorted_articles.each do |item|
+  %ul.left
+    - sorted_articles[0..(sorted_articles.length/2)].each do |item|
+      %li
+        = render('_excerpt', :item => item)
+  %ul.right
+    - sorted_articles[(sorted_articles.length/2)..sorted_articles.length].each do |item|
       %li
         = render('_excerpt', :item => item)
