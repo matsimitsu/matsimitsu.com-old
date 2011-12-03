@@ -1,0 +1,30 @@
+---
+title: Fixing capistrano encoding errors
+tags: [ruby, capistrano]
+created_at: 2011/12/03
+kind: article
+excerpt: Fixing ArgumentError invalid byte sequence in US-ASCII
+---
+
+%h2 Problem
+
+%p
+  When deploying one of my apps, suddenly an error appeared:
+<script src="https://gist.github.com/1427631.js?file=gistfile1.txt"></script>
+
+%p
+  Turns out the simple_form gem has the following authors in its gemspec:
+<script src="https://gist.github.com/1427639.js?file=gistfile1.rb"></script>
+
+%p
+  One of the names has a character that causes issues when a server environment is not UTF8.
+  %a{:href => 'https://github.com/plataformatec/simple_form/issues/361'}
+    A ticket was made
+  but the gem autors decided that it was en environment problem and not a gem problem (and i agree).
+
+%h2 Solution
+
+%p
+  The fix is pretty simple, we need to tell the server that the encoding should be UTF8 for the command that will be executed. Luckly we can do this in capistrano in a very easy way. Place this in your deploy.rb file and everything shoud work as expected!
+
+<script src="https://gist.github.com/1427648.js?file=gistfile1.rb"></script>
