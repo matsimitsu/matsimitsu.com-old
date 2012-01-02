@@ -10,7 +10,7 @@
   background: inline-image($image) $properties
   *background: url($image) $properties
 
-$font-color: #363636
+$font-color: #333333
 $link-color: blue
 $font-family: "DroidSerif", Georgia, serif
 $font-size: 12px
@@ -41,16 +41,20 @@ h1
   font-size: 35px
 
 h2
-  font-size: 1.2em
+  font-size: 1.5em
   padding-top: 10px
   font-weight: bold
+  margin-bottom: 5px
 
 h3
+  font-size: 1.4em
   padding-top: 5px
   font-weight: bold
-
+  margin-bottom: 5px
 p
-  margin-bottom: 18px
+  font-size: 1.2em
+  line-height: 1.4em
+  margin-bottom: 1.5em
 
 header
   height: 200px
@@ -121,7 +125,7 @@ footer
       padding: 30px 0 0 150px
       margin: 0px auto
       display: block
-      width: 250px
+      width: 300px
       height: 40px
       a, a:hover, a:active, a:visited
         color: #f3f3f3
@@ -134,11 +138,21 @@ footer
 #main
   overflow: hidden
 article
-  width: 670px
+  width: 960px
   font-size: 15px
   line-height: 25px
+  text-align: center
+
+  p
+    width: 500px
+    margin: 0px auto 1.5em auto
+    text-align: left
 
   header
+    width: 670px
+    margin: 0px auto 1.7em auto
+
+    text-align: left
     position: relative
     height: 100px
     background: transparent
@@ -183,8 +197,19 @@ article
     +box-shadow(#333333 0px 2px 5px)
 
   .gist
+    text-align: left
     font-size: 0.8em
     line-height: 1.1em
+    width: 670px
+    margin: 0px auto 1.7em auto
+
+  ul
+    width: 500px
+    margin: 0px auto 1.7em auto
+    text-align: left
+
+    li
+      list-style-type: disc
 
 section#latest_posts
   margin-top: 20px
